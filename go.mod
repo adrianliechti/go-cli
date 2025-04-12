@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	github.com/charmbracelet/huh/v2 v2.0.0-20250402132115-2785463c98f8
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.1.0.20250401142624-f274d052315e
+	github.com/charmbracelet/x/term v0.2.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/urfave/cli/v3 v3.1.1
 )
@@ -19,7 +20,6 @@ require (
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
 	github.com/charmbracelet/x/input v0.3.4 // indirect
-	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

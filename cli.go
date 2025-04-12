@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/huh/v2"
+	"github.com/charmbracelet/huh/v2/spinner"
 	"github.com/charmbracelet/lipgloss/v2"
 	"github.com/charmbracelet/lipgloss/v2/table"
 	"github.com/charmbracelet/x/term"
@@ -111,6 +112,29 @@ func OpenURL(url string) error {
 	}
 
 	return nil
+}
+
+func Run(title string, fn func() error) error {
+	var err error
+
+	spinner.New().
+		Title(title).
+		Action(func() {
+			err = fn()
+		}).
+		Run()
+
+	return err
+}
+
+func MustRun(title string, fn func() error) error {
+	err := Run(title, fn)
+
+	if err != nil {
+		Fatal(err)
+	}
+
+	return err
 }
 
 func Select(label string, items []string) (int, string, error) {
