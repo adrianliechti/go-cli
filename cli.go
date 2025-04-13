@@ -31,6 +31,9 @@ type StringMapArg = cli.StringMapArg
 type TimestampArg = cli.TimestampArg
 type UintArg = cli.UintArg
 
+var ErrUserAborted = huh.ErrUserAborted
+var ErrUserTimeout = huh.ErrTimeout
+
 func IsTerminal() {
 	term.IsTerminal(os.Stdout.Fd())
 }
