@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/charmbracelet/huh/v2"
-	"github.com/charmbracelet/huh/v2/spinner"
-	"github.com/charmbracelet/lipgloss/v2"
-	"github.com/charmbracelet/lipgloss/v2/table"
+	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/huh/spinner"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/lipgloss/table"
 	"github.com/charmbracelet/x/term"
 	"github.com/pkg/browser"
 	"github.com/urfave/cli/v3"
@@ -48,7 +48,7 @@ func Infof(format string, a ...interface{}) {
 }
 
 func Warn(v ...any) {
-	color := lipgloss.Yellow
+	color := lipgloss.Color("11")
 
 	var style = lipgloss.NewStyle().
 		Foreground(color)
@@ -63,7 +63,7 @@ func Warnf(format string, a ...interface{}) {
 }
 
 func Error(v ...any) {
-	color := lipgloss.Red
+	color := lipgloss.Color("9")
 
 	var style = lipgloss.NewStyle().
 		Foreground(color)
@@ -272,7 +272,7 @@ func MustFile(label string, types []string) string {
 }
 
 func Title(val string) {
-	color := lipgloss.Green
+	color := lipgloss.Color("10")
 
 	var style = lipgloss.NewStyle().
 		Foreground(color).
