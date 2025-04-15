@@ -181,7 +181,7 @@ func MustSelect(label string, items []string) (int, string) {
 	return index, value
 }
 
-func Prompt(label, placeholder string) (string, error) {
+func Input(label, placeholder string) (string, error) {
 	i := huh.NewInput()
 
 	if label != "" {
@@ -206,8 +206,43 @@ func Prompt(label, placeholder string) (string, error) {
 	return result, nil
 }
 
-func MustPrompt(label, placeholder string) string {
-	value, err := Prompt(label, placeholder)
+func MustInput(label, placeholder string) string {
+	value, err := Input(label, placeholder)
+
+	if err != nil {
+		Fatal(err)
+	}
+
+	return value
+}
+
+func Text(label, placeholder string) (string, error) {
+	i := huh.NewText()
+
+	if label != "" {
+		i.Title(label)
+	}
+
+	if placeholder != "" {
+		i.Placeholder(placeholder)
+	}
+
+	var result string
+	i.Value(&result)
+
+	if err := i.Run(); err != nil {
+		return "", err
+	}
+
+	if result != "" {
+		fmt.Println("> " + result)
+	}
+
+	return result, nil
+}
+
+func MustText(label, placeholder string) string {
+	value, err := Text(label, placeholder)
 
 	if err != nil {
 		Fatal(err)
