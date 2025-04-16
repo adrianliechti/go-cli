@@ -87,6 +87,21 @@ func Fatalf(format string, a ...interface{}) {
 	Fatal(v)
 }
 
+func Debug(v ...any) {
+	color := lipgloss.Color("8")
+
+	var style = lipgloss.NewStyle().
+		Foreground(color)
+
+	s := style.Render(fmt.Sprintln(v...))
+	os.Stderr.WriteString(s + "\n")
+}
+
+func Debugf(format string, a ...interface{}) {
+	v := fmt.Sprintf(format, a...)
+	Debug(v)
+}
+
 func ShowAppHelp(cmd *Command) error {
 	return cli.ShowAppHelp(cmd)
 }
