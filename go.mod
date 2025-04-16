@@ -3,8 +3,8 @@ module github.com/adrianliechti/go-cli
 go 1.24.2
 
 require (
-	github.com/charmbracelet/huh v0.6.0
-	github.com/charmbracelet/huh/spinner v0.0.0-20250410174039-76d1f8226680
+	github.com/charmbracelet/huh v0.7.0
+	github.com/charmbracelet/huh/spinner v0.0.0-20250414191420-151ba059f6ea
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/x/term v0.2.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -34,8 +34,7 @@ require (
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.18.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 )
