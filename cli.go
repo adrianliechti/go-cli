@@ -27,7 +27,7 @@ type BoolFlag = cli.BoolFlag
 type FloatArg = cli.FloatArg
 type IntArg = cli.IntArg
 type StringArg = cli.StringArg
-type StringMapArg = cli.StringMapArg
+type StringMapArgs = cli.StringMapArgs
 type TimestampArg = cli.TimestampArg
 type UintArg = cli.UintArg
 
