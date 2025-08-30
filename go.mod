@@ -4,11 +4,11 @@ go 1.24.3
 
 require (
 	github.com/charmbracelet/huh v0.7.0
-	github.com/charmbracelet/huh/spinner v0.0.0-20250710160949-2f807e878be2
+	github.com/charmbracelet/huh/spinner v0.0.0-20250826160502-fa7f8a27cd5c
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/x/term v0.2.1
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/urfave/cli/v3 v3.3.8
+	github.com/urfave/cli/v3 v3.4.1
 )
 
 require (
