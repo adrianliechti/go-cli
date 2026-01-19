@@ -1,14 +1,10 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
-	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/huh/spinner"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
-	"github.com/charmbracelet/x/term"
 	"github.com/pkg/browser"
 	"github.com/urfave/cli/v3"
 )
@@ -31,11 +27,10 @@ type StringMapArgs = cli.StringMapArgs
 type TimestampArg = cli.TimestampArg
 type UintArg = cli.UintArg
 
-var ErrUserAborted = huh.ErrUserAborted
-var ErrUserTimeout = huh.ErrTimeout
+var ErrUserAborted = errors.New("user aborted")
 
-func IsTerminal() {
-	term.IsTerminal(os.Stdout.Fd())
+func IsTerminal() bool {
+	return isTerminalCheck()
 }
 
 func Info(v ...interface{}) {
@@ -48,12 +43,7 @@ func Infof(format string, a ...interface{}) {
 }
 
 func Warn(v ...any) {
-	color := lipgloss.Color("11")
-
-	var style = lipgloss.NewStyle().
-		Foreground(color)
-
-	s := style.Render(fmt.Sprintln(v...))
+	s := themeWarning(fmt.Sprint(v...))
 	os.Stderr.WriteString(s + "\n")
 }
 
@@ -63,12 +53,7 @@ func Warnf(format string, a ...interface{}) {
 }
 
 func Error(v ...any) {
-	color := lipgloss.Color("9")
-
-	var style = lipgloss.NewStyle().
-		Foreground(color)
-
-	s := style.Render(fmt.Sprintln(v...))
+	s := themeError(fmt.Sprint(v...))
 	os.Stderr.WriteString(s + "\n")
 }
 
@@ -88,12 +73,7 @@ func Fatalf(format string, a ...interface{}) {
 }
 
 func Debug(v ...any) {
-	color := lipgloss.Color("8")
-
-	var style = lipgloss.NewStyle().
-		Foreground(color)
-
-	s := style.Render(fmt.Sprintln(v...))
+	s := themeMuted(fmt.Sprint(v...))
 	os.Stderr.WriteString(s + "\n")
 }
 
@@ -132,211 +112,6 @@ func OpenURL(url string) error {
 	return nil
 }
 
-func Run(title string, fn func() error) error {
-	var err error
-
-	spinner.New().
-		Title(title).
-		Action(func() {
-			err = fn()
-		}).
-		Run()
-
-	return err
-}
-
-func MustRun(title string, fn func() error) error {
-	err := Run(title, fn)
-
-	if err != nil {
-		Fatal(err)
-	}
-
-	return err
-}
-
-func Select(label string, items []string) (int, string, error) {
-	s := huh.NewSelect[int]()
-
-	if label != "" {
-		s.Title(label)
-	}
-
-	options := make([]huh.Option[int], 0)
-
-	for i, item := range items {
-		options = append(options, huh.NewOption(item, i))
-	}
-
-	var index int
-
-	s.Value(&index)
-	s.Options(options...)
-
-	if err := s.Run(); err != nil {
-		return 0, "", err
-	}
-
-	result := items[index]
-
-	if result != "" {
-		fmt.Println("> " + result)
-	}
-
-	return index, result, nil
-}
-
-func MustSelect(label string, items []string) (int, string) {
-	index, value, err := Select(label, items)
-
-	if err != nil {
-		Fatal(err)
-	}
-
-	return index, value
-}
-
-func Input(label, placeholder string) (string, error) {
-	i := huh.NewInput()
-
-	if label != "" {
-		i.Title(label)
-	}
-
-	if placeholder != "" {
-		i.Placeholder(placeholder)
-	}
-
-	var result string
-	i.Value(&result)
-
-	if err := i.Run(); err != nil {
-		return "", err
-	}
-
-	if result != "" {
-		fmt.Println("> " + result)
-	}
-
-	return result, nil
-}
-
-func MustInput(label, placeholder string) string {
-	value, err := Input(label, placeholder)
-
-	if err != nil {
-		Fatal(err)
-	}
-
-	return value
-}
-
-func Text(label, placeholder string) (string, error) {
-	i := huh.NewText()
-
-	if label != "" {
-		i.Title(label)
-	}
-
-	if placeholder != "" {
-		i.Placeholder(placeholder)
-	}
-
-	var result string
-	i.Value(&result)
-
-	if err := i.Run(); err != nil {
-		return "", err
-	}
-
-	if result != "" {
-		fmt.Println("> " + result)
-	}
-
-	return result, nil
-}
-
-func MustText(label, placeholder string) string {
-	value, err := Text(label, placeholder)
-
-	if err != nil {
-		Fatal(err)
-	}
-
-	return value
-}
-
-func Confirm(label string, placeholder bool) (bool, error) {
-	c := huh.NewConfirm()
-
-	if label != "" {
-		c.Title(label)
-	}
-
-	var result bool
-	c.Value(&result)
-
-	return result, c.Run()
-}
-
-func MustConfirm(label string, placeholder bool) bool {
-	value, err := Confirm(label, placeholder)
-
-	if err != nil {
-		Fatal(err)
-	}
-
-	return value
-}
-
-func File(label string, types []string) (string, error) {
-	i := huh.NewFilePicker().
-		DirAllowed(false)
-
-	if label != "" {
-		i.Title(label)
-	}
-
-	if len(types) > 0 {
-		i.AllowedTypes(types)
-	}
-
-	var result string
-	i.Value(&result)
-
-	if err := i.Run(); err != nil {
-		return "", err
-	}
-
-	return result, nil
-}
-
-func MustFile(label string, types []string) string {
-	value, err := File(label, types)
-
-	if err != nil {
-		Fatal(err)
-	}
-
-	return value
-}
-
 func Title(val string) {
-	color := lipgloss.Color("10")
-
-	var style = lipgloss.NewStyle().
-		Foreground(color).
-		Bold(true).
-		Underline(true)
-
-	fmt.Println(style.Render(val))
-}
-
-func Table(headers []string, rows [][]string) {
-	table := table.New().
-		Headers(headers...).
-		Rows(rows...).
-		Width(80)
-
-	fmt.Println(table)
+	fmt.Println(bold(underline(themeHighlight(val))))
 }
