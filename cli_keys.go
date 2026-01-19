@@ -11,6 +11,7 @@ import (
 const (
 	keyUnknown = iota
 	keyEnter
+	keyShiftEnter
 	keyBackspace
 	keyTab
 	keyEscape
@@ -26,9 +27,11 @@ const (
 	keyCtrlC
 	keyCtrlD
 	keyCtrlE
+	keyCtrlJ
 	keyCtrlK
 	keyCtrlU
 	keyCtrlW
+	keyAltEnter
 )
 
 // readKey reads a single key press and returns the key code and rune
@@ -57,9 +60,11 @@ func readKey(r io.Reader) (key int, char rune, err error) {
 		return keyCtrlE, 0, nil
 	case 9: // Tab
 		return keyTab, '\t', nil
+	case 10: // Ctrl+J (line feed)
+		return keyCtrlJ, '\n', nil
 	case 11: // Ctrl+K
 		return keyCtrlK, 0, nil
-	case 13, 10: // Enter (CR or LF)
+	case 13: // Enter (CR)
 		return keyEnter, '\n', nil
 	case 21: // Ctrl+U
 		return keyCtrlU, 0, nil
@@ -100,6 +105,26 @@ func parseEscapeSequence(buf []byte) (key int, char rune, err error) {
 	if buf[1] == '[' {
 		if len(buf) < 3 {
 			return keyEscape, 0, nil
+		}
+
+		// Check for CSI u encoding: ESC [ <key> ; <modifier> u
+		// Shift+Enter: ESC [ 1 3 ; 2 u  or similar patterns
+		if len(buf) >= 6 && buf[len(buf)-1] == 'u' {
+			// Parse modifier (2=Shift, 3=Alt, 4=Shift+Alt)
+			seq := string(buf[2 : len(buf)-1])
+			parts := splitCSI(seq)
+			if len(parts) >= 2 {
+				keyCode := parts[0]
+				modifier := parts[1]
+				if keyCode == 13 { // Enter key
+					if modifier == 2 { // Shift
+						return keyShiftEnter, '\n', nil
+					}
+					if modifier == 3 { // Alt
+						return keyAltEnter, '\n', nil
+					}
+				}
+			}
 		}
 
 		switch buf[2] {
@@ -149,6 +174,22 @@ func parseEscapeSequence(buf []byte) (key int, char rune, err error) {
 	}
 
 	return keyEscape, 0, nil
+}
+
+// splitCSI splits a CSI parameter string like "13;2" into integers
+func splitCSI(s string) []int {
+	var result []int
+	var current int
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			current = current*10 + int(c-'0')
+		} else if c == ';' {
+			result = append(result, current)
+			current = 0
+		}
+	}
+	result = append(result, current)
+	return result
 }
 
 // decodeUTF8 decodes a UTF-8 sequence from bytes

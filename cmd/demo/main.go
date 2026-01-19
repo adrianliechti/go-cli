@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// Text demo
-	description, err := cli.Text("Enter a description (Ctrl+D to submit):", "")
+	description, err := cli.Text("Enter a description:", "")
 	if err != nil {
 		cli.Fatal("Text error:", err)
 	}

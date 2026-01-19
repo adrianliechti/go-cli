@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"unicode/utf8"
 )
 
 // fileEntry represents a file or directory in the browser
@@ -13,6 +15,22 @@ type fileEntry struct {
 	name  string
 	path  string
 	isDir bool
+}
+
+// isRootDir checks if a path is a root directory (cross-platform)
+func isRootDir(path string) bool {
+	if runtime.GOOS == "windows" {
+		// On Windows, root looks like "C:\" or "C:/"
+		if len(path) == 3 && path[1] == ':' && (path[2] == '\\' || path[2] == '/') {
+			return true
+		}
+		// Also handle "C:" without trailing slash
+		if len(path) == 2 && path[1] == ':' {
+			return true
+		}
+		return false
+	}
+	return path == "/"
 }
 
 func File(label string, types []string) (string, error) {
@@ -35,12 +53,20 @@ func File(label string, types []string) (string, error) {
 		fmt.Print(escHideCursor)
 		defer fmt.Print(escShowCursor)
 
+		// Helper to navigate to a new directory
+		navigateToDir := func(dir string) {
+			currentDir = dir
+			filter = ""
+			selectedIdx = 0
+			scrollOffset = 0
+		}
+
 		// Read directory contents
 		readDir := func(dir string) []fileEntry {
 			entries := []fileEntry{}
 
 			// Add parent directory option if not at root
-			if dir != "/" {
+			if !isRootDir(dir) {
 				entries = append(entries, fileEntry{
 					name:  "..",
 					path:  filepath.Dir(dir),
@@ -159,62 +185,68 @@ func File(label string, types []string) (string, error) {
 				lineCount++
 			}
 
-			// Adjust scroll offset
-			if selectedIdx < scrollOffset {
-				scrollOffset = selectedIdx
-			}
-			if selectedIdx >= scrollOffset+maxVisible {
-				scrollOffset = selectedIdx - maxVisible + 1
-			}
-
-			// Print entries
-			visibleEnd := scrollOffset + maxVisible
-			if visibleEnd > len(filteredEntries) {
-				visibleEnd = len(filteredEntries)
-			}
-
-			// Show scroll indicator at top
-			if scrollOffset > 0 {
-				fmt.Print("\r\033[K" + themeMuted("  ↑ more items above") + "\r\n")
+			// Handle empty directory
+			if len(filteredEntries) == 0 {
+				fmt.Print("\r\033[K" + themeMuted("  (empty)") + "\r\n")
 				lineCount++
-			}
-
-			for i := scrollOffset; i < visibleEnd; i++ {
-				entry := filteredEntries[i]
-				fmt.Print("\r\033[K")
-
-				prefix := "  "
-				if i == selectedIdx {
-					prefix = themeSuccess("> ")
+			} else {
+				// Adjust scroll offset
+				if selectedIdx < scrollOffset {
+					scrollOffset = selectedIdx
+				}
+				if selectedIdx >= scrollOffset+maxVisible {
+					scrollOffset = selectedIdx - maxVisible + 1
 				}
 
-				icon := "  "
-				if entry.isDir {
-					icon = "▸ "
+				// Print entries
+				visibleEnd := scrollOffset + maxVisible
+				if visibleEnd > len(filteredEntries) {
+					visibleEnd = len(filteredEntries)
 				}
 
-				name := entry.name
-				if entry.isDir && entry.name != ".." {
-					name += "/"
+				// Show scroll indicator at top
+				if scrollOffset > 0 {
+					fmt.Print("\r\033[K" + themeMuted("  ↑ more items above") + "\r\n")
+					lineCount++
 				}
 
-				if i == selectedIdx {
-					fmt.Print(prefix + icon + themeSuccess(name))
-				} else {
-					if entry.isDir {
-						fmt.Print(prefix + icon + themeAccent(name))
-					} else {
-						fmt.Print(prefix + icon + themeText(name))
+				for i := scrollOffset; i < visibleEnd; i++ {
+					entry := filteredEntries[i]
+					fmt.Print("\r\033[K")
+
+					prefix := "  "
+					if i == selectedIdx {
+						prefix = themeSuccess("> ")
 					}
-				}
-				fmt.Print("\r\n")
-				lineCount++
-			}
 
-			// Show scroll indicator at bottom
-			if visibleEnd < len(filteredEntries) {
-				fmt.Print("\r\033[K" + themeMuted("  ↓ more items below") + "\r\n")
-				lineCount++
+					icon := "  "
+					if entry.isDir {
+						icon = "▸ "
+					}
+
+					name := entry.name
+					if entry.isDir && entry.name != ".." {
+						name += "/"
+					}
+
+					if i == selectedIdx {
+						fmt.Print(prefix + icon + themeSuccess(name))
+					} else {
+						if entry.isDir {
+							fmt.Print(prefix + icon + themeAccent(name))
+						} else {
+							fmt.Print(prefix + icon + themeText(name))
+						}
+					}
+					fmt.Print("\r\n")
+					lineCount++
+				}
+
+				// Show scroll indicator at bottom
+				if visibleEnd < len(filteredEntries) {
+					fmt.Print("\r\033[K" + themeMuted("  ↓ more items below") + "\r\n")
+					lineCount++
+				}
 			}
 
 			// Print help
@@ -243,12 +275,9 @@ func File(label string, types []string) (string, error) {
 					entry := filteredEntries[selectedIdx]
 					if entry.isDir {
 						// Navigate into directory
-						currentDir = entry.path
+						navigateToDir(entry.path)
 						allEntries = readDir(currentDir)
-						filter = ""
 						filteredEntries = allEntries
-						selectedIdx = 0
-						scrollOffset = 0
 					} else {
 						// Select file
 						result = entry.path
@@ -270,19 +299,16 @@ func File(label string, types []string) (string, error) {
 				}
 
 			case keyDown:
-				if selectedIdx < len(filteredEntries)-1 {
+				if len(filteredEntries) > 0 && selectedIdx < len(filteredEntries)-1 {
 					selectedIdx++
 				}
 
 			case keyLeft:
 				// Go to parent directory
-				if currentDir != "/" {
-					currentDir = filepath.Dir(currentDir)
+				if !isRootDir(currentDir) {
+					navigateToDir(filepath.Dir(currentDir))
 					allEntries = readDir(currentDir)
-					filter = ""
 					filteredEntries = allEntries
-					selectedIdx = 0
-					scrollOffset = 0
 				}
 
 			case keyRight:
@@ -290,18 +316,16 @@ func File(label string, types []string) (string, error) {
 				if len(filteredEntries) > 0 {
 					entry := filteredEntries[selectedIdx]
 					if entry.isDir {
-						currentDir = entry.path
+						navigateToDir(entry.path)
 						allEntries = readDir(currentDir)
-						filter = ""
 						filteredEntries = allEntries
-						selectedIdx = 0
-						scrollOffset = 0
 					}
 				}
 
 			case keyBackspace:
 				if len(filter) > 0 {
-					filter = filter[:len(filter)-1]
+					_, size := utf8.DecodeLastRuneInString(filter)
+					filter = filter[:len(filter)-size]
 					filterEntries()
 				}
 
@@ -313,12 +337,9 @@ func File(label string, types []string) (string, error) {
 				// Go to home directory
 				home, err := os.UserHomeDir()
 				if err == nil {
-					currentDir = home
+					navigateToDir(home)
 					allEntries = readDir(currentDir)
-					filter = ""
 					filteredEntries = allEntries
-					selectedIdx = 0
-					scrollOffset = 0
 				}
 
 			default:

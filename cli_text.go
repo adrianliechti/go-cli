@@ -12,7 +12,10 @@ func Text(label, placeholder string) (string, error) {
 
 	err := withRawMode(func() error {
 		lines := []string{""}
-		currentLine := 0
+		if placeholder != "" {
+			lines = strings.Split(placeholder, "\n")
+		}
+		currentLine := len(lines) - 1
 		lastLineCount := 0
 
 		// Hide cursor during editing
@@ -65,6 +68,7 @@ func Text(label, placeholder string) (string, error) {
 				return ErrUserAborted
 
 			case keyCtrlD:
+				// Ctrl+D submits the text
 				result = strings.Join(lines, "\n")
 				clearPrevious()
 				if label != "" {
@@ -78,6 +82,7 @@ func Text(label, placeholder string) (string, error) {
 				return nil
 
 			case keyEnter:
+				// Enter adds a new line
 				lines = append(lines, "")
 				currentLine = len(lines) - 1
 

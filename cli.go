@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkg/browser"
 	"github.com/urfave/cli/v3"
 )
 
@@ -88,28 +87,6 @@ func ShowAppHelp(cmd *Command) error {
 
 func ShowCommandHelp(cmd *Command) error {
 	return cli.ShowSubcommandHelp(cmd)
-}
-
-func OpenFile(name string) error {
-	err := browser.OpenFile(name)
-
-	if err != nil {
-		Error("Unable to open file. try manually")
-		Error(name)
-	}
-
-	return nil
-}
-
-func OpenURL(url string) error {
-	err := browser.OpenURL(url)
-
-	if err != nil {
-		Error("Unable to start your browser. try manually.")
-		Error(url)
-	}
-
-	return nil
 }
 
 func Title(val string) {
