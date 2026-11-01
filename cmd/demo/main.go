@@ -86,8 +86,8 @@ func main() {
 		cli.Fatal("Run error:", err)
 	}
 
-	fmt.Println()
-	cli.Info("✓ Processing complete!")
+	cli.Done("Processing complete")
+	cli.Fields([][2]string{{"Name", name}, {"Color", color}})
 	fmt.Println()
 
 	// Table demo - Summary

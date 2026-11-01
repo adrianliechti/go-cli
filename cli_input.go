@@ -14,7 +14,7 @@ func Input(label, placeholder string) (string, error) {
 
 		redraw := func() {
 			clearLine()
-			prompt := themeAccent(bold(label)) + themeAccent(": ")
+			prompt := markAsk() + " " + themeAccent(bold(label)) + "  "
 			if placeholder != "" && buffer == "" {
 				fmt.Print(prompt + themeSubtle(placeholder))
 			} else {
@@ -32,7 +32,7 @@ func Input(label, placeholder string) (string, error) {
 
 			switch key {
 			case keyCtrlC:
-				fmt.Print("\r\n")
+				fmt.Print("\r\033[K")
 				return ErrUserAborted
 
 			case keyEnter:
@@ -40,7 +40,7 @@ func Input(label, placeholder string) (string, error) {
 					buffer = placeholder
 				}
 				result = buffer
-				fmt.Print("\r\n")
+				answered(label, buffer)
 				return nil
 
 			case keyBackspace:

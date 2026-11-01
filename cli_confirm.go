@@ -15,7 +15,7 @@ func Confirm(label string, defaultValue bool) (bool, error) {
 			if defaultValue {
 				hint = "(Y/n)"
 			}
-			fmt.Print(themeAccent(bold(label)) + " " + themeSubtle(hint) + themeAccent(": "))
+			fmt.Print(markAsk() + " " + themeAccent(bold(label)) + " " + themeSubtle(hint) + "  ")
 		}
 
 		redraw()
@@ -28,27 +28,23 @@ func Confirm(label string, defaultValue bool) (bool, error) {
 
 			switch key {
 			case keyCtrlC:
-				fmt.Print("\r\n")
+				fmt.Print("\r\033[K")
 				return ErrUserAborted
 
 			case keyEnter:
 				result = defaultValue
-				if result {
-					fmt.Print(themeSuccess("yes") + "\r\n")
-				} else {
-					fmt.Print(themeError("no") + "\r\n")
-				}
+				answered(label, yesNo(result))
 				return nil
 
 			default:
 				if char == 'y' || char == 'Y' {
 					result = true
-					fmt.Print(themeSuccess("yes") + "\r\n")
+					answered(label, yesNo(result))
 					return nil
 				}
 				if char == 'n' || char == 'N' {
 					result = false
-					fmt.Print(themeError("no") + "\r\n")
+					answered(label, yesNo(result))
 					return nil
 				}
 			}
@@ -70,4 +66,11 @@ func MustConfirm(label string, defaultValue bool) bool {
 	}
 
 	return value
+}
+
+func yesNo(v bool) string {
+	if v {
+		return "yes"
+	}
+	return "no"
 }

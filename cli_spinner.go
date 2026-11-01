@@ -34,9 +34,13 @@ func Run(title string, fn func() error) error {
 	for {
 		select {
 		case <-done:
-			clearLine()
-			fmt.Println(themeSuccess("✓") + " " + themeText(title))
 			wg.Wait()
+			clearLine()
+			if fnErr != nil {
+				fmt.Println(markFail() + " " + themeText(title))
+			} else {
+				fmt.Println(markDone() + " " + themeText(title))
+			}
 			return fnErr
 		case <-ticker.C:
 			clearLine()
