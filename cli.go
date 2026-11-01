@@ -8,20 +8,36 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// Commands, flags and arguments come from urfave/cli; the aliases below let a
+// program build its commands with this package alone.
+
 type Command = cli.Command
+type ActionFunc = cli.ActionFunc
+type Args = cli.Args
 
 type Flag = cli.Flag
 type Argument = cli.Argument
 
+type BoolFlag = cli.BoolFlag
+type DurationFlag = cli.DurationFlag
+type FloatFlag = cli.FloatFlag
+type FloatSliceFlag = cli.FloatSliceFlag
 type IntFlag = cli.IntFlag
 type IntSliceFlag = cli.IntSliceFlag
+type Int64Flag = cli.Int64Flag
+type UintFlag = cli.UintFlag
+type UintSliceFlag = cli.UintSliceFlag
 type StringFlag = cli.StringFlag
 type StringSliceFlag = cli.StringSliceFlag
-type BoolFlag = cli.BoolFlag
+type StringMapFlag = cli.StringMapFlag
+type TimestampFlag = cli.TimestampFlag
+type GenericFlag = cli.GenericFlag
 
 type FloatArg = cli.FloatArg
 type IntArg = cli.IntArg
+type IntArgs = cli.IntArgs
 type StringArg = cli.StringArg
+type StringArgs = cli.StringArgs
 type StringMapArgs = cli.StringMapArgs
 type TimestampArg = cli.TimestampArg
 type UintArg = cli.UintArg

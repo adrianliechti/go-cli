@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"unicode/utf8"
 )
 
+// Select lets the user pick one item, filtering as they type. An item may
+// carry a description after a tab ("Wingman\tTCP 4242"); it is shown muted
+// and aligned, and left out of the returned value and the summary line.
 func Select(label string, items []string) (int, string, error) {
 	if len(items) == 0 {
 		return 0, "", errors.New("no items to select")
@@ -14,6 +18,27 @@ func Select(label string, items []string) (int, string, error) {
 
 	var result int
 	var filter string
+
+	width := 0
+	for _, item := range items {
+		value, _ := splitItem(item)
+		width = max(width, utf8.RuneCountInString(value))
+	}
+	render := func(item string, selected bool) string {
+		value, description := splitItem(item)
+		if description != "" {
+			value = pad(value, width)
+		}
+		// The selector sits in the mark column; items line up with the label.
+		line := "  " + themeText(value)
+		if selected {
+			line = themeSuccess("› " + value)
+		}
+		if description != "" {
+			line += "  " + themeMuted(description)
+		}
+		return line
+	}
 
 	err := withRawMode(func() error {
 		selectedIdx := 0
@@ -64,26 +89,20 @@ func Select(label string, items []string) (int, string, error) {
 			lineCount := 0
 
 			// Print label
-			if label != "" {
-				fmt.Print("\r\033[K" + themeAccent(bold(label)) + "\r\n")
-				lineCount++
-			}
-
-			// Print filter line if active
+			fmt.Print("\r\033[K" + markAsk() + " " + themeAccent(bold(label)))
 			if filter != "" {
-				fmt.Print("\r\033[K" + themeMuted("Filter: ") + themeText(filter) + "\r\n")
-				lineCount++
+				fmt.Print("  " + themeMuted("filter: ") + themeText(filter))
 			}
+			fmt.Print("\r\n")
+			lineCount++
 
 			// Print options
 			for i, item := range filteredItems {
-				fmt.Print("\r\033[K")
-				if i == selectedIdx {
-					fmt.Print(themeSuccess("> ") + themeSuccess(item))
-				} else {
-					fmt.Print(themeSubtle("  ") + themeText(item))
-				}
-				fmt.Print("\r\n")
+				fmt.Print("\r\033[K" + render(item, i == selectedIdx) + "\r\n")
+				lineCount++
+			}
+			if len(filteredItems) == 0 {
+				fmt.Print("\r\033[K  " + themeMuted("no matches") + "\r\n")
 				lineCount++
 			}
 
@@ -108,10 +127,8 @@ func Select(label string, items []string) (int, string, error) {
 				if len(filteredItems) > 0 {
 					result = filteredIndices[selectedIdx]
 					clearPrevious()
-					if label != "" {
-						fmt.Print("\r\033[K" + themeAccent(bold(label)) + "\r\n")
-					}
-					fmt.Print("\r\033[K" + themeSuccess("> ") + themeText(items[result]) + "\r\n")
+					value, _ := splitItem(items[result])
+					answered(label, value)
 					return nil
 				}
 
@@ -149,7 +166,8 @@ func Select(label string, items []string) (int, string, error) {
 		return 0, "", err
 	}
 
-	return result, items[result], nil
+	value, _ := splitItem(items[result])
+	return result, value, nil
 }
 
 func MustSelect(label string, items []string) (int, string) {
